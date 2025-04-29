@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/historyCSS.css}">
+    <title>Transaction History</title>
+</head>
+<body>
+<div class="top">
+    <h1 class="title">Skins Monkey Comparator - History</h1>
+</div>
+<div class="mid">
+    <div class="midTop">
+        <div class="midTopName">
+            <span>Name:</span>
+        </div>
+        <div class="midTopData">
+            <span class="dataSpan">Qty:</span>
+            <span class="dataSpan">SkinsMonkey:</span>
+            <span class="dataSpan">Steam:</span>
+            <span class="dataSpan">price Difference:</span>
+            <span class="dataSpan">Date:</span>
+        </div>
+    </div>
+<div class="midContent">
+    <form th:object="${itemsBought}">
+        <th:block th:each="item : ${itemsBought}">
+            <div class="record">
+                <div class="imageSection">
+                    <img th:src="'https://community.fastly.steamstatic.com/economy/image/' + ${item.imageUrl} + '/64fx64f'">
+                </div>
+                <div class="nameSection">
+                    <a style="color: #d4d4d4;" th:href="@{'https://steamcommunity.com/market/listings/730/' + ${item.marketName}}"><span th:text="${item.marketName}"></span></a><br>
+                </div>
+                <div class="dataSection">
+                    <span class="dataSpan" th:text="${item.quantity}"></span>
+                    <span class="dataSpan" th:text="${item.priceSM} + 'zł'" style="color: #f5c800"></span>
+                    <span class="dataSpan" th:text="${item.priceSteam} + 'zł'" style="color: #1155c2"></span>
+                    <span class="dataSpan" th:text="${item.priceDifference} + 'zł'" style="color: #3bbd08"></span>
+                    <span class="dataSpan" th:text="${item.buy_date}"></span>
+                </div>
+            </div>
+        </th:block>
+    </form>
+</div>
+</div>
+
+
+</body>
+</html>

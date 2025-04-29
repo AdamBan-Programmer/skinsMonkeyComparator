@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/homeCSS.css}">
+    <title>Compare Skins Value!</title>
+</head>
+<body>
+    <div class="top">
+        <h1 class="title">Skins Monkey Comparator</h1>
+            <div class="TaxCalculator">
+                <fieldset>
+                    <legend>Tax Calculator</legend><label for="valueToCalculate">Put value:</label>
+                    <input type="number" id="valueToCalculate">
+                    <input type="submit" value="CALCULATE" onclick="calculateTax()"><br>
+                    <span id="calculatedTax" style="color:yellow">Calculated Value: 0.00zł</span>
+                </fieldset>
+            </div>
+    </div>
+
+<div class="pageContent">
+    <div class="left">
+        <h2 class="subtitle">Options:</h2><br>
+        <form method="POST" th:object="${searchingParams}">
+            <div class="content">
+                <label for="currencyValue"><b>PLN:</b></label>
+                <input type="number" step="0.01" id="currencyValue" th:field="*{currencyValue}"><span>zł.</span><br>
+                <label for="priceMin"><b>Min:</b></label>
+                <input type="number" step="0.01" id="priceMin" th:field="*{priceMin}"><span>zł.</span><br>
+                <label for="priceMax"><b>Max:</b></label>
+                <input type="number" step="0.01" id="priceMax" th:field="*{priceMax}"><span>zł.</span><br>
+                <label for="requestsDelay"><b>Requests Delay:</b></label>
+                <input type="range" min="0" max="10" id="requestsDelay" th:field="*{requestsDelay}" oninput="updateSeekbarValue()">
+                <span id="seekbarValue" th:text="*{requestsDelay} + ' sec.'">0 sec.</span>
+            </div>
+            <input class="compare" style="background-color: #08d131;"  type="submit" value="COMPARE ALL" onclick="startComparing()" th:formaction="@{/}">
+            <input class="compare" style="background-color: #ed7905;" type="submit" value="UPDATE" onclick="startComparing()" th:formaction="@{/update}">
+            <input class="cancel" type="submit" value="CANCEL" th:formaction="@{/cancel}">
+        </form>
+    </div>
+
+    <div class="mid" th:object="${itemsList}">
+        <div class="midTop">
+            <span id="status">Searching Items: </span>
+            <progress id="progressBar" value="0" max="100"></progress>
+            <span id="itemsProgress">Updated: 0/0</span>
+            <span id="itemsCounter">Items: 0</span>
+            <div class="radioWithLabel">
+                <label for="all">All</label>
+                <input type="radio" name="filter" id="all" checked onchange="itemsVisible(true)">
+            </div>
+            <div class="radioWithLabel">
+                <label for="onlyWorth">Worth</label>
+                <input type="radio" name="filter" id="onlyWorth" onchange="itemFilter(true)">
+            </div>
+            <div class="radioWithLabel">
+                <label for="onlyWorst">Not-Worth</label>
+                <input type="radio" name="filter" id="onlyWorst" onchange="itemFilter(false)">
+            </div>
+            <form method="POST">
+                <input type="submit" value="HISTORY" th:formaction="@{/showHistory}">
+            </form>
+        </div>
+
+        <div class="itemsField" id="itemsField">
+            <th:block th:each="item : ${itemsList}">
+                <th:block th:if="${item.priceSM > 0 && item.priceSteam > 0}">
+                <div class="item" th:attr="onmouseover=|this.style.backgroundColor='#a7a8a7'|,
+              onmouseout=|this.style.backgroundColor='#292a2b'|,
+              onclick=|itemSelect('${item.marketName}', '${item.priceSM}', '${item.priceSteam}', '${item.priceDifference}')|">
+                    <div class="itemTop">
+                        <span th:text="${item.marketName}"></span>
+                    </div>
+                    <div class="itemMid">
+                        <th:block th:if="${item.extinct}">
+                           <img class="extinctImage" th:src="@{/Images/extinct.png}">
+                        </th:block>
+                        <img class="itemImage" th:src="'https://community.fastly.steamstatic.com/economy/image/' + ${item.imageUrl} + '/400fx400f'">
+                    </div>
+                    <div class="itemBottom">
+                        <span th:text="'Price difference: '+${item.priceDifference}+'zł'"></span>
+                    </div>
+                </div>
+                </th:block>
+            </th:block>
+        </div>
+    </div>
+
+    <div class="right">
+        <h2 class="subtitle">Item:</h2><br>
+        <form method="post" th:action="@{/buy}" th:object="${buyItem}">
+        <div class="content">
+            <span type="text" id="itemName" class="itemData"><b>Name:</b></span><br>
+            <input type="hidden" th:field="*{marketName}">
+            <a id="priceSteam" class="itemData" style="color: #1155c2" href="https://steamcommunity.com/market/">Steam price:</a><br>
+            <span id="priceSM" class="itemData" style="color: #f5c800"><b>SkinsMonkey:</b></span><br>
+            <span id="priceDifference" class="itemData" style="color: #3bbd08"><b>Price Difference:</b></span><br>
+            <label for="quantity" >Qty: </label>
+            <input class="buyInput" style="width: 10%;" type="number" min="1" step="1" id="quantity" th:field="*{quantity}"><br>
+            <label for="buy_date" >Date: </label>
+            <input class="buyInput" style="width: 30%;" type="date" id="buy_date" th:field="*{buy_date}"><br>
+            <input type="submit" value="Tag 'BOUGHT'">
+        </div>
+        </form>
+    </div>
+</div>
+
+</body>
+<script th:inline="javascript">
+    let itemsList = /*[[${itemsList}]]*/ [];
+
+    function calculateTax()
+    {
+        const TAX = 1.15;
+        var value = document.getElementById("valueToCalculate").value;
+        var calculatedValue = value/TAX;
+        document.getElementById("calculatedTax").innerHTML = "Calculated Value: " + calculatedValue + " zł.";
+    }
+
+    function itemSelect(name,priceSM,priceSteam,priceDiff)
+    {
+       document.getElementById("itemName").innerHTML="Item: " + name;
+       document.getElementById("priceSM").innerHTML="SkinsMonkey: " + priceSM + "zł";
+       document.getElementById("priceSteam").innerHTML="Steam price: " + priceSteam + "zł";
+       document.getElementById("priceSteam").href = "https://steamcommunity.com/market/listings/730/" + name;
+       document.getElementById("priceDifference").innerHTML="Price Difference: " + priceDiff + "zł";
+
+       document.querySelector('input[name="marketName"]').value = name;
+       //copy name
+       navigator.clipboard.writeText(name);
+    }
+
+    function updateItemsCounter()
+    {
+        var itemsCount = 0;
+        for(var item of itemsList)
+        {
+            if(item.priceSM > 0 && item.priceSteam > 0)
+            {
+                itemsCount++;
+            }
+        }
+        document.getElementById("itemsCounter").innerHTML="Items: " + itemsCount;
+    }
+
+    window.onload = function() {
+        updateItemsCounter();
+    };
+
+    function startComparing()
+    {
+        itemsVisible(false);
+        clear();
+        startTimer();
+    }
+
+    function startTimer() {
+    let startTime = Date.now();
+    let timer = setInterval(function () {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        updateStatus(elapsed);
+    }, 1000);
+}
+
+   function updateStatus(sec)
+   {
+        fetch("http://localhost:8080/api/status")
+            .then(res => res.json())
+            .then(res => {
+        document.getElementById('status').innerHTML="Comparing Items ..." + formatTime(sec);
+        document.getElementById("progressBar").value = res.progress;
+        document.getElementById("itemsProgress").innerHTML = "Updated: " + res.itemsCompared + "/" + res.itemsToCompare;
+    })
+   }
+
+    function formatTime(seconds) {
+    var hours = (seconds / 3600) | 0;
+    var minutes = ((seconds % 3600) / 60) | 0;
+    var secs = seconds % 60;
+
+    var formattedHours = (hours < 10) ? '0' + hours : hours;
+    var formattedMinutes = (minutes < 10) ? '0' + minutes : minutes;
+    var formattedSecs = (secs < 10) ? '0' + secs : secs;
+    return formattedHours + ':' + formattedMinutes + ':' + formattedSecs;
+   }
+
+    function itemFilter(showWorth)
+    {
+        let itemsCount = 0;
+        const container = document.getElementById("itemsField");
+        for(let i=0;i<itemsList.length;i++)
+        {
+            let item = itemsList[i];
+            let child = container.children[i];
+
+            if((showWorth && item.worth) || (!showWorth && !item.worth))
+            {
+                child.style.display = "block";
+                itemsCount++;
+            }
+            else
+            {
+                child.style.display = "none";
+            }
+        }
+        document.getElementById("itemsCounter").innerHTML="Items: " + itemsCount;
+    }
+
+    function updateSeekbarValue()
+    {
+        var value = document.getElementById("requestsDelay").value;
+        document.getElementById("seekbarValue").innerHTML = value + " sec.";
+    }
+
+    function itemsVisible(shouldShow)
+    {
+       const container = document.getElementById("itemsField");
+       let itemsCount = 0;
+       for (const child of container.children) {
+            if(shouldShow)
+            {
+                child.style.display = "block";
+                itemsCount++;
+            }
+            else
+            {
+                child.style.display = "none";
+            }
+       }
+       document.getElementById("itemsCounter").innerHTML="Items: " + itemsCount;
+    }
+
+    function clear()
+    {
+        document.getElementById("progressBar").value = 0;
+        document.getElementById("itemsProgress").innerHTML = "Updated: 0/0";
+    }
+
+</script>
+</html>
