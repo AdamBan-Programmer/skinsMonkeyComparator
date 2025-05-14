@@ -33,5 +33,6 @@ Click 'Tag BOUGHT' Then go to history.
 - SQL
 
 # Requirements:
+- Xampp
 - Windows 10/11.
 - Java 17 or higher.
